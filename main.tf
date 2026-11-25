@@ -52,6 +52,19 @@ resource "aws_workspaces_directory" "workspaces_directories" {
   dynamic "workspace_access_properties" {
     for_each = each.value.workspace_access_properties != null ? [each.value.workspace_access_properties] : []
     content {
+      dynamic "access_endpoint_config" {
+        for_each = workspace_access_properties.value.access_endpoint_config != null ? [workspace_access_properties.value.access_endpoint_config] : []
+        content {
+          dynamic "access_endpoints" {
+            for_each = access_endpoint_config.value.access_endpoints
+            content {
+              access_endpoint_type = access_endpoints.value.access_endpoint_type
+              vpc_endpoint_id      = access_endpoints.value.vpc_endpoint_id
+            }
+          }
+          internet_fallback_protocols = access_endpoint_config.value.internet_fallback_protocols
+        }
+      }
       device_type_android    = workspace_access_properties.value.device_type_android
       device_type_chromeos   = workspace_access_properties.value.device_type_chromeos
       device_type_ios        = workspace_access_properties.value.device_type_ios

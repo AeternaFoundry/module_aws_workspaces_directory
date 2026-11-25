@@ -30,6 +30,11 @@ Optional:
         - restart_workspace (optional)
         - switch_running_mode (optional)
     - workspace_access_properties (block):
+        - access_endpoint_config (optional, block):
+            - access_endpoints (required, block):
+                - access_endpoint_type (required)
+                - vpc_endpoint_id (required)
+            - internet_fallback_protocols (optional)
         - device_type_android (optional)
         - device_type_chromeos (optional)
         - device_type_ios (optional)
@@ -79,6 +84,13 @@ EOT
       switch_running_mode  = optional(bool)
     }))
     workspace_access_properties = optional(object({
+      access_endpoint_config = optional(object({
+        access_endpoints = list(object({
+          access_endpoint_type = string
+          vpc_endpoint_id      = string
+        }))
+        internet_fallback_protocols = optional(list(string))
+      }))
       device_type_android    = optional(string)
       device_type_chromeos   = optional(string)
       device_type_ios        = optional(string)
@@ -96,6 +108,14 @@ EOT
       user_enabled_as_local_administrator = optional(bool)
     }))
   }))
-  # Note: 15 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
+  validation {
+    condition = alltrue([
+      for k, v in var.workspaces_directories : (
+        v.workspace_access_properties == null || (v.workspace_access_properties.access_endpoint_config == null || (length(v.workspace_access_properties.access_endpoint_config.access_endpoints) >= 1))
+      )
+    ])
+    error_message = "Each access_endpoints list must contain at least 1 items"
+  }
+  # Note: 17 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
